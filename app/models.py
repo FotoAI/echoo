@@ -29,7 +29,7 @@ class Image(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     user_id = Column(Integer, nullable=True, index=True)
-    fotoowl_id = Column(Integer, nullable=True)
+    fotoowl_image_id = Column(Integer, nullable=True)
     fotoowl_url = Column(String(255), nullable=True)
     filecoin_url = Column(String(255), nullable=True)
     filecoin_cid = Column(String(255), nullable=True)

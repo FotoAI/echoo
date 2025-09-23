@@ -52,7 +52,7 @@ class ImageCreate(BaseModel):
     name: str
     user_id: Optional[int] = None
     is_selfie: Optional[bool] = False
-    fotoowl_id: Optional[int] = None
+    fotoowl_image_id: Optional[int] = None
     fotoowl_url: Optional[str] = None
     filecoin_url: Optional[str] = None
     cid: Optional[str] = None
@@ -75,7 +75,7 @@ class ImageUpdate(BaseModel):
     name: Optional[str] = None
     user_id: Optional[int] = None
     is_selfie: Optional[bool] = False
-    fotoowl_id: Optional[int] = None
+    fotoowl_image_id: Optional[int] = None
     fotoowl_url: Optional[str] = None
     filecoin_url: Optional[str] = None
     filecoin_cid: Optional[str] = None
@@ -90,7 +90,7 @@ class ImageResponse(BaseModel):
     id: int
     name: str
     user_id: Optional[int] = None
-    fotoowl_id: Optional[int] = None
+    fotoowl_image_id: Optional[int] = None
     fotoowl_url: Optional[str] = None
     filecoin_url: Optional[str] = None
     filecoin_cid: Optional[str] = None
@@ -110,7 +110,7 @@ class ImageListResponse(BaseModel):
     id: Optional[int] = None  # Allow None for images not in our database
     name: str
     user_id: Optional[int] = None
-    fotoowl_id: Optional[int] = None
+    fotoowl_image_id: Optional[int] = None
     fotoowl_url: Optional[str] = None
     filecoin_url: Optional[str] = None
     filecoin_cid: Optional[str] = None

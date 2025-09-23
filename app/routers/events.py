@@ -347,11 +347,11 @@ async def get_event_matched_image_list(
         
         # Find matching images in our database
         our_images = db.query(Image).filter(
-            Image.fotoowl_id.in_(fotoowl_image_ids)
+            Image.fotoowl_image_id.in_(fotoowl_image_ids)
         ).all()
         
-        # Create a mapping of fotoowl_id to our image data
-        our_images_map = {img.fotoowl_id: img for img in our_images}
+        # Create a mapping of fotoowl_image_id to our image data
+        our_images_map = {img.fotoowl_image_id: img for img in our_images}
         
         # Step 5: Build response combining FotoOwl data with our data
         response_images = []
@@ -368,7 +368,7 @@ async def get_event_matched_image_list(
                     "id": our_image.id,
                     "name": our_image.name,
                     "user_id": our_image.user_id,
-                    "fotoowl_id": our_image.fotoowl_id,
+                    "fotoowl_image_id": our_image.fotoowl_image_id,
                     "fotoowl_url": our_image.fotoowl_url,
                     "filecoin_url": our_image.filecoin_url,
                     "filecoin_cid": our_image.filecoin_cid,
@@ -392,7 +392,7 @@ async def get_event_matched_image_list(
                     "id": None,  # External image not in our database
                     "name": fotoowl_img.get('name', ''),
                     "user_id": current_user.id,
-                    "fotoowl_id": fotoowl_id,
+                    "fotoowl_image_id": fotoowl_id,
                     "fotoowl_url": fotoowl_url,
                     "filecoin_url": None,
                     "filecoin_cid": None,
