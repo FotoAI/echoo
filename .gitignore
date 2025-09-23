@@ -1,0 +1,99 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+fotoowl_venv/
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+*.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code settings
+.claude/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+log/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Docker
+docker-compose.override.yml
+
+# Alembic
+alembic/versions/
+
+# Node modules (from examples)
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# Old directories (don't push experimental code)
+old/
+near-api-examples/
+
+# Migration scripts (already applied)
+migrate_*.py
+migrate_*.sql
+
+# Test files (optional - you might want these)
+test_*.py
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
