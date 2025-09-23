@@ -19,6 +19,7 @@ class UserProfileUpdate(BaseModel):
     twitter_url: Optional[str] = None
     linkedin_url: Optional[str] = None
     description: Optional[str] = None
+    interests: Optional[str] = None
 
 class UserProfile(BaseModel):
     id: int
@@ -28,6 +29,7 @@ class UserProfile(BaseModel):
     twitter_url: Optional[str] = None
     linkedin_url: Optional[str] = None
     description: Optional[str] = None
+    interests: Optional[str] = None
     selfie_cid: Optional[str] = None
     selfie_url: Optional[str] = None
     selfie_height: Optional[int] = None

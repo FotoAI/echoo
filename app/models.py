@@ -19,6 +19,7 @@ class User(Base):
     twitter_url = Column(String(200), nullable=True)
     linkedin_url = Column(String(200), nullable=True)
     description = Column(Text, nullable=True)
+    interests = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
