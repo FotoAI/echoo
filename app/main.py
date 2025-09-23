@@ -1,5 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+# Load environment variables from AWS SSM first
+from .aws_ssm import set_env
+set_env()
+
+# Fallback to .env for local development
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("Loaded .env file for local development")
+except ImportError:
+    print("python-dotenv not installed, skipping .env file")
+
 from app.database import engine
 from app.models import Base
 from app.routers import auth, profile, images, events, public_events
@@ -49,4 +63,20 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "environment": os.getenv("ENVIRONMENT", "development")}
+    return {
+        "status": "healthy", 
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "service": "echoo-api"
+    }
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler for unhandled errors"""
+    # Log the error (in production, you might want to send to a logging service)
+    print(f"Unhandled error: {exc}")
+    
+    # Return error response to client
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "service": "echoo-api"}
+    )

@@ -47,10 +47,19 @@ This will start PostgreSQL with pgvector extension enabled.
 
 ### 3. Environment Variables
 
-Copy `.env.example` to `.env` and update as needed:
+**For Production (AWS SSM):**
+- Configure parameters in AWS SSM Parameter Store under `/echoo/` path
+- Example parameters:
+  - `/echoo/DATABASE_URL`
+  - `/echoo/INTERNAL_USERNAME` 
+  - `/echoo/INTERNAL_PASSWORD`
+  - `/echoo/POSTGRES_USER`
+  - `/echoo/POSTGRES_PASSWORD`
 
+**For Local Development:**
 ```bash
 cp .env.example .env
+# Edit .env with your local database credentials
 ```
 
 ### 4. Initialize Database
@@ -123,6 +132,44 @@ GET /api/v1/get-event-matched-image-list?event_id=1413
 - `image_vector` - Vector representation of image (512 dimensions)
 - `event_id` - Event ID (optional)
 - `created_at`, `updated_at` - Timestamps
+
+## 🔧 Configuration
+
+### AWS SSM Parameter Store
+The application automatically loads configuration from AWS SSM Parameter Store in production:
+
+**Parameter Path**: `/echoo/`
+
+**Required Parameters:**
+```
+/echoo/DATABASE_URL              - PostgreSQL connection string
+/echoo/INTERNAL_USERNAME         - Internal service username
+/echoo/INTERNAL_PASSWORD         - Internal service password
+/echoo/POSTGRES_USER            - Database user
+/echoo/POSTGRES_PASSWORD        - Database password
+/echoo/POSTGRES_DB              - Database name
+/echoo/POSTGRES_HOST            - Database host
+/echoo/POSTGRES_PORT            - Database port
+```
+
+**EC2 IAM Role Permissions:**
+Your EC2 instance needs these permissions:
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+                "ssm:GetParametersByPath"
+            ],
+            "Resource": "arn:aws:ssm:us-east-2:*:parameter/echoo/*"
+        }
+    ]
+}
+```
 
 ## Authentication
 
