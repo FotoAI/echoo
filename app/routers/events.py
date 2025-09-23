@@ -264,7 +264,7 @@ async def get_user_registered_events(
 
 @router.get("/get-event-matched-image-list", response_model=List[ImageListResponse])
 async def get_event_matched_image_list(
-    event_id: int = Query(..., description="FotoOwl event ID"),
+    event_id: int = Query(..., description="Internal event ID from Events table"),
     page: int = Query(0, ge=0, description="Page number starting from 0"),
     page_size: int = Query(10, ge=-1, description="Number of images per page. Use -1 for all images"),
     current_user: User = Depends(get_current_user),
@@ -273,8 +273,10 @@ async def get_event_matched_image_list(
     """
     Get matched images from FotoOwl API for a specific event with pagination support
     
-    1. Find user's registration for the event (get request_id automatically)
-    2. Get registration details (request_key, event_key)
+    Takes internal event ID (events.id), looks up fotoowl_event_id and event_key
+    
+    1. Get event from Events table using internal ID
+    2. Find user's registration for the event (get request_id automatically)
     3. Call FotoOwl API to get matched images with pagination
     4. Match FotoOwl images with our Images table
     5. Return images in same format as /images endpoint with image_url
@@ -284,10 +286,24 @@ async def get_event_matched_image_list(
     - page_size: Number of images per page, -1 for all images
     """
     
-    # Step 1: Find user's registration for the event (automatically get request_id)
+    # Step 1: Get event from Events table using internal event ID
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event not found with id {event_id}"
+        )
+    
+    if not event.fotoowl_event_id or not event.fotoowl_event_key:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Event is missing FotoOwl configuration (fotoowl_event_id or fotoowl_event_key)"
+        )
+    
+    # Step 2: Find user's registration for the event (automatically get request_id)
     registration = db.query(EventRequestMapping).filter(
         EventRequestMapping.user_id == current_user.id,
-        EventRequestMapping.fotoowl_event_id == event_id
+        EventRequestMapping.fotoowl_event_id == event.fotoowl_event_id
     ).first()
     
     if not registration:
@@ -296,25 +312,15 @@ async def get_event_matched_image_list(
             detail=f"User is not registered for event {event_id}. Please register first."
         )
     
-    # Step 2: Get event key from Events table (if available)
-    event = db.query(Event).filter(Event.fotoowl_event_id == event_id).first()
-    event_key = event.fotoowl_event_key if event else None
-    
-    if not event_key:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Event key not found for event {event_id}"
-        )
-    
     # Step 3: Call FotoOwl API to get matched images
     try:
         fotoowl_api_url = "https://dev-api.fotoowl.ai/open/event/image-list"
         
         params = {
-            'event_id': event_id,
+            'event_id': event.fotoowl_event_id,
             'page': page,
             'page_size': page_size,
-            'key': event_key,
+            'key': event.fotoowl_event_key,
             'request_id': registration.request_id,  # Automatically retrieved from registration
             'request_key': registration.request_key
         }
@@ -401,7 +407,7 @@ async def get_event_matched_image_list(
                     "width": fotoowl_img.get('width'),
                     "description": f"Matched image from event {event_id}",
                     "image_encoding": None,
-                    "event_id": event_id,
+                    "event_id": event.fotoowl_event_id,
                     "image_url": fotoowl_url,  # Use FotoOwl URL as image_url
                     "created_at": None,
                     "updated_at": None
