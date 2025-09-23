@@ -153,6 +153,8 @@ class EventResponse(BaseModel):
     name: str
     description: Optional[str] = None
     cover_image_url: Optional[str] = None
+    cover_image_height: Optional[int] = None
+    cover_image_width: Optional[int] = None
     event_date: Optional[date] = None
     fotoowl_event_id: Optional[int] = None
     fotoowl_event_key: Optional[str] = None
@@ -175,6 +177,8 @@ class RegisteredEventResponse(BaseModel):
     event_name: Optional[str] = None
     event_description: Optional[str] = None
     event_cover_image_url: Optional[str] = None
+    event_cover_image_height: Optional[int] = None
+    event_cover_image_width: Optional[int] = None
     event_date: Optional[date] = None
     fotoowl_event_id: int  # From EventRequestMapping
     fotoowl_event_key: Optional[str] = None

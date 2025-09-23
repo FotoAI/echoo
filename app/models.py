@@ -62,6 +62,8 @@ class Event(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     cover_image_url = Column(String(255), nullable=True)
+    cover_image_height = Column(Integer, nullable=True)
+    cover_image_width = Column(Integer, nullable=True)
     event_date = Column(Date, nullable=True)
     fotoowl_event_id = Column(Integer, nullable=True, index=True)
     fotoowl_event_key = Column(String(255), nullable=True)
