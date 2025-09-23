@@ -1,0 +1,15 @@
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t sjc.vultrcr.com/fotoowl/echoo:latest \
+  --push .
+
+
+export KUBECONFIG=config-prod.yaml
+
+kubectl logs -n dev --tail=1000 -f echoo-api-98b678bb5-mclt5
+
+kubectl describe pod echoo-api-7bd8c44856-kz5s8 -n dev
+
+kubectl rollout restart deployment/echoo-api -n dev
+
+
+kubectl get pod -n dev
