@@ -32,18 +32,13 @@ app = FastAPI(
     version=PROJECT_VERSION
 )
 
-# CORS configuration - allow all origins
-origins = [
-    "*"
-]
-
+# CORS configuration - allow all origins for dev environment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r'.*',  # Allow all origins with regex
-    allow_credentials=True,  # Can be True when using allow_origin_regex
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,  # Must be False when using allow_origins=["*"]
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Create database tables on startup
