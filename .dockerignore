@@ -1,3 +1,9 @@
+# Git
+.git
+.gitignore
+README.md
+docs/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -57,6 +63,12 @@ config-*.yaml
 kubeconfig
 .kubeconfig
 
+# Kubernetes manifests (not needed in Docker image)
+k8s/
+
+# GitHub workflows (not needed in Docker image)
+.github/
+
 # OS
 .DS_Store
 .DS_Store?
@@ -86,54 +98,13 @@ coverage
 
 # Docker
 docker-compose.override.yml
+Dockerfile*
+!Dockerfile
 
 # Alembic
 alembic/versions/
 
-# Node modules and JavaScript dependencies
-node_modules/
-package-lock.json
-pnpm-lock.yaml
-jspm_packages/
-web_modules/
-.npm
-.eslintcache
-.stylelintcache
-.node_repl_history
-*.tgz
-.yarn-integrity
-.cache
-.parcel-cache
-.next
-out
-.nuxt
-.temp
-.svelte-kit/
-**/.vitepress/dist
-**/.vitepress/cache
-.docusaurus
-.serverless/
-.fusebox/
-.dynamodb/
-.firebase/
-.tern-port
-.vscode-test
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-*.tsbuildinfo
-bower_components
-.lock-wscript
-build/Release
-.grunt
-
-# Old directories (don't push experimental code)
+# Old directories
 old/
 near-api-examples/
 
@@ -141,7 +112,7 @@ near-api-examples/
 migrate_*.py
 migrate_*.sql
 
-# Test files (optional - you might want these)
+# Test files
 test_*.py
 
 # Temporary files

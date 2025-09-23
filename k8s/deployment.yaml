@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echoo-api
+  namespace: dev
+  labels:
+    app: echoo-api
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: echoo-api
+  template:
+    metadata:
+      labels:
+        app: echoo-api
+        version: v1
+    spec:
+      containers:
+      - name: echoo-api
+        image: sjc.vultrcr.com/fotoowl/echoo:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "dev"
+        # Environment variables from SSM Parameter Store
+        - name: INTERNAL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: INTERNAL_USERNAME
+        - name: INTERNAL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: INTERNAL_PASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: POSTGRES_DB
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: POSTGRES_HOST
+        - name: POSTGRES_PORT
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: POSTGRES_PORT
+        # Health check
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        # Image pull policy
+        imagePullPolicy: Always
+      # Service account for AWS permissions (optional)
+      serviceAccountName: echoo-service-account
