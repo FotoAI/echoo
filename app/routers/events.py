@@ -77,21 +77,35 @@ async def register_for_event(
 ):
     """
     Register user for a FotoOwl event
-    Requires user authentication and only event_id
-    Automatically retrieves event key from Events table
+    Requires user authentication and only event_id (our internal events.id)
+    Automatically retrieves fotoowl_event_id and event key from Events table
     Uses user's selfie_url to upload image to FotoOwl API
     """
     
-    # Check if user already registered for this event
+    # Get event from our Events table using our internal event ID
+    event = db.query(Event).filter(Event.id == registration_data.event_id).first()
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event not found with id {registration_data.event_id}"
+        )
+    
+    if not event.fotoowl_event_key or not event.fotoowl_event_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Event is missing FotoOwl configuration (event_key or fotoowl_event_id)"
+        )
+    
+    # Check if user already registered for this event (using fotoowl_event_id)
     existing_registration = db.query(EventRequestMapping).filter(
         EventRequestMapping.user_id == current_user.id,
-        EventRequestMapping.fotoowl_event_id == registration_data.event_id
+        EventRequestMapping.fotoowl_event_id == event.fotoowl_event_id
     ).first()
     
     if existing_registration:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"User already registered for event {registration_data.event_id}"
+            detail=f"User already registered for this event"
         )
     
     # Check if user has a selfie_url
@@ -101,21 +115,13 @@ async def register_for_event(
             detail="User must have a selfie uploaded before registering for events"
         )
     
-    # Get event key from Events table
-    event = db.query(Event).filter(Event.fotoowl_event_id == registration_data.event_id).first()
-    if not event or not event.fotoowl_event_key:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Event not found or missing event key for event_id {registration_data.event_id}"
-        )
-    
     try:
         # Download image from user's selfie_url
         image_file_path = await download_image_from_url(current_user.selfie_url)
         
         # Call FotoOwl API with event key from database
         fotoowl_response = await call_fotoowl_api(
-            registration_data.event_id,
+            event.fotoowl_event_id,   # Use fotoowl_event_id from events table
             event.fotoowl_event_key,  # Use key from events table
             image_file_path
         )
@@ -140,7 +146,7 @@ async def register_for_event(
         
         # Create event request mapping record
         event_mapping = EventRequestMapping(
-            fotoowl_event_id=registration_data.event_id,
+            fotoowl_event_id=event.fotoowl_event_id,  # Use fotoowl_event_id from events table
             request_id=request_id,
             request_key=request_key,
             user_id=current_user.id,

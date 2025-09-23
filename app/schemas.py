@@ -127,7 +127,7 @@ class ImageListResponse(BaseModel):
 
 # Event Registration schemas
 class EventRegistrationRequest(BaseModel):
-    event_id: int  # This is the fotoowl_event_id from the frontend
+    event_id: int  # This is our internal event ID (events.id), not fotoowl_event_id
 
 class EventRegistrationResponse(BaseModel):
     id: int
