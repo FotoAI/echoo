@@ -35,7 +35,7 @@ app = FastAPI(
 # CORS configuration - allow all origins for dev environment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["http://localhost:3000"],  # Allow all origins
     allow_credentials=True,  # Must be False when using allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
