@@ -51,7 +51,7 @@ class ImageCreate(BaseModel):
     fotoowl_id: Optional[int] = None
     fotoowl_url: Optional[str] = None
     filecoin_url: Optional[str] = None
-    filecoin_cid: Optional[str] = None
+    cid: Optional[str] = None
     size: Optional[int] = None
     description: Optional[str] = None
     image_encoding: Optional[str] = None

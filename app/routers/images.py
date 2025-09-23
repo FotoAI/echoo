@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import logging
 from app.database import get_db
 from app.schemas import ImageCreate, ImageUpdate, ImageResponse, ImageListResponse
 from app.models import Image, User, EventRequestMapping
 from app.auth import verify_internal_auth, get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -29,7 +32,7 @@ async def create_image(
         fotoowl_id=image_data.fotoowl_id,
         fotoowl_url=image_data.fotoowl_url,
         filecoin_url=image_data.filecoin_url,
-        filecoin_cid=image_data.filecoin_cid,
+        filecoin_cid=image_data.cid,
         size=image_data.size,
         description=image_data.description,
         image_encoding=image_data.image_encoding,
@@ -37,16 +40,22 @@ async def create_image(
     )
     
     db.add(new_image)
-    db.commit()
-    db.refresh(new_image)
     
     # If this is a selfie and has a user_id, update the user's selfie fields
+    logger.info(f"Selfie check: is_selfie={image_data.is_selfie}, user_id={image_data.user_id}")
     if image_data.is_selfie and image_data.user_id:
+        logger.info(f"Updating selfie for user_id={image_data.user_id}")
         user = db.query(User).filter(User.id == image_data.user_id).first()
         if user:
-            user.selfie_cid = image_data.filecoin_cid
-            user.selfie_url = image_data.fotoowl_url
-            db.commit()
+            logger.info(f"Found user: {user.username}, updating selfie_cid={image_data.cid}, selfie_url={image_data.filecoin_url}")
+            user.selfie_cid = image_data.cid
+            user.selfie_url = image_data.filecoin_url
+    else:
+        logger.info(f"Not updating selfie: is_selfie={image_data.is_selfie}, user_id={image_data.user_id}")
+    
+    # Commit both image and user updates in a single transaction
+    db.commit()
+    db.refresh(new_image)
     
     return new_image
 
@@ -97,17 +106,28 @@ async def update_image(
     for field, value in update_data.items():
         setattr(image, field, value)
     
-    db.commit()
-    db.refresh(image)
-    
     # If this is a selfie and the image has a user_id, update the user's selfie fields
+    logger.info(f"PUT Selfie check: is_selfie={image_data.is_selfie}, user_id={image.user_id}")
     if image_data.is_selfie and image.user_id:
+        logger.info(f"PUT Updating selfie for user_id={image.user_id}")
         user = db.query(User).filter(User.id == image.user_id).first()
         if user:
+            logger.info(f"PUT Found user: {user.username}, updating selfie_cid={image.filecoin_cid}, selfie_url={image.fotoowl_url}")
             # Use the updated image's current values for selfie fields
             user.selfie_cid = image.filecoin_cid
             user.selfie_url = image.fotoowl_url
-            db.commit()
+        else:
+            logger.error(f"PUT User with id {image.user_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {image.user_id} not found"
+            )
+    else:
+        logger.info(f"PUT Not updating selfie: is_selfie={image_data.is_selfie}, user_id={image.user_id}")
+    
+    # Commit both image and user updates in a single transaction
+    db.commit()
+    db.refresh(image)
     
     return image
 
