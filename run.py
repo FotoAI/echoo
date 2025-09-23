@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple script to run the FastAPI application locally
+Simple script to run the Echoo FastAPI application locally
 """
 import uvicorn
 import os
@@ -10,16 +10,20 @@ if __name__ == "__main__":
     try:
         from dotenv import load_dotenv
         load_dotenv()
+        print("Loaded .env file for local development")
     except ImportError:
-        print("python-dotenv not installed. Install with: pip install python-dotenv")
-        print("Or set environment variables manually.")
+        print("python-dotenv not installed, skipping .env file")
     
-    # Get configuration from environment
-    host = os.getenv("HOST", "127.0.0.1")
-    port = int(os.getenv("PORT", 8000))
-    debug = os.getenv("DEBUG", "True").lower() == "true"
+    # Hardcoded configuration (non-sensitive)
+    host = "0.0.0.0"
+    port = 8000
     
-    print(f"Starting FotoOwl API on {host}:{port}")
+    # Environment-based settings
+    environment = os.getenv("ENVIRONMENT", "development")
+    debug = environment == "development"
+    
+    print(f"Starting Echoo API on {host}:{port}")
+    print(f"Environment: {environment}")
     print(f"Debug mode: {debug}")
     
     uvicorn.run(

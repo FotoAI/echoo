@@ -140,9 +140,9 @@ The application automatically loads configuration from AWS SSM Parameter Store i
 
 **Parameter Path**: `/echoo/`
 
-**Required Parameters:**
+**Required SSM Parameters (Production):**
 ```
-/echoo/DATABASE_URL              - PostgreSQL connection string
+/echoo/DATABASE_URL              - PostgreSQL connection string  
 /echoo/INTERNAL_USERNAME         - Internal service username
 /echoo/INTERNAL_PASSWORD         - Internal service password
 /echoo/POSTGRES_USER            - Database user
@@ -151,6 +151,13 @@ The application automatically loads configuration from AWS SSM Parameter Store i
 /echoo/POSTGRES_HOST            - Database host
 /echoo/POSTGRES_PORT            - Database port
 ```
+
+**Hardcoded Application Settings:**
+- **API Version**: `/api/v1`
+- **Service Name**: `Echoo API`
+- **Port**: `8000` 
+- **Host**: `0.0.0.0`
+- **CORS Origins**: Localhost + production domains
 
 **EC2 IAM Role Permissions:**
 Your EC2 instance needs these permissions:

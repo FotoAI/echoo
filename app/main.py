@@ -19,22 +19,26 @@ from app.models import Base
 from app.routers import auth, profile, images, events, public_events
 import os
 
-# Get configuration from environment
-PROJECT_NAME = os.getenv("PROJECT_NAME", "FotoOwl API")
-PROJECT_VERSION = os.getenv("PROJECT_VERSION", "1.0.0")
-API_V1_STR = os.getenv("API_V1_STR", "/api/v1")
+# Application configuration (hardcoded non-sensitive settings)
+PROJECT_NAME = "Echoo API"
+PROJECT_VERSION = "1.0.0" 
+API_V1_STR = "/api/v1"
+PORT = 8000
+HOST = "0.0.0.0"
 
 app = FastAPI(
     title=PROJECT_NAME,
-    description="FastAPI backend for FotoOwl with authentication and profile management",
+    description="FastAPI backend for Echoo with event management, authentication, and FotoOwl integration",
     version=PROJECT_VERSION
 )
 
-# Add CORS middleware
+# CORS configuration (hardcoded allowed origins)
 origins = [
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "http://localhost:8000",
+    "http://localhost:3000",    # React dev server
+    "http://localhost:8080",    # Alternative dev server
+    "http://localhost:8000",    # FastAPI dev server
+    "https://echoo.fotoai.com", # Production frontend (if needed)
+    "*"  # Allow all origins for now - restrict in production
 ]
 
 app.add_middleware(

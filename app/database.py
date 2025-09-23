@@ -3,7 +3,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# PostgreSQL database URL - can be set via DATABASE_URL or individual components
+# PostgreSQL database configuration
+# These environment variables are loaded from:
+# - Production: AWS SSM Parameter Store (/echoo/*)
+# - Development: .env file
+# - Only sensitive/environment-specific values are in env vars
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
