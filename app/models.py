@@ -53,7 +53,6 @@ class EventRequestMapping(Base):
     user_id = Column(Integer, nullable=False, index=True)
     redirect_url = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class Event(Base):
     __tablename__ = "events"
