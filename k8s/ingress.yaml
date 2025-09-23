@@ -2,23 +2,26 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: echoo-api-ingress
+  namespace: dev
   labels:
     app: echoo-api
   annotations:
-    # For AWS ALB Ingress Controller
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
-    
-    # For NGINX Ingress Controller (alternative)
-    # kubernetes.io/ingress.class: nginx
-    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # NGINX Ingress Controller
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
 spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.echoo.ing
+    secretName: echoo-tls-secret
   rules:
-  - host: echoo-api.yourdomain.com  # Replace with your domain
+  - host: api.echoo.ing
     http:
       paths:
       - path: /
@@ -28,8 +31,3 @@ spec:
             name: echoo-api-service
             port:
               number: 80
-  # TLS configuration (optional)
-  # tls:
-  # - hosts:
-  #   - echoo-api.yourdomain.com
-  #   secretName: echoo-tls-secret

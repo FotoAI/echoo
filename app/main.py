@@ -32,21 +32,13 @@ app = FastAPI(
     version=PROJECT_VERSION
 )
 
-# CORS configuration (hardcoded allowed origins)
-origins = [
-    "http://localhost:3000",    # React dev server
-    "http://localhost:8080",    # Alternative dev server
-    "http://localhost:8000",    # FastAPI dev server
-    "https://echoo.fotoai.com", # Production frontend (if needed)
-    "*"  # Allow all origins for now - restrict in production
-]
-
+# CORS configuration - allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Must be False when using wildcard origins
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Create database tables on startup
