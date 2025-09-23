@@ -142,11 +142,10 @@ The application automatically loads configuration from AWS SSM Parameter Store i
 
 **Required SSM Parameters (Production):**
 ```
-/echoo/DATABASE_URL              - PostgreSQL connection string  
 /echoo/INTERNAL_USERNAME         - Internal service username
 /echoo/INTERNAL_PASSWORD         - Internal service password
 /echoo/POSTGRES_USER            - Database user
-/echoo/POSTGRES_PASSWORD        - Database password
+/echoo/POSTGRES_PASSWORD        - Database password  
 /echoo/POSTGRES_DB              - Database name
 /echoo/POSTGRES_HOST            - Database host
 /echoo/POSTGRES_PORT            - Database port
