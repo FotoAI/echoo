@@ -14,19 +14,19 @@ class UserLogin(BaseModel):
     password: str
 
 class UserProfileUpdate(BaseModel):
-    name: Optional[str] = None
+    email: Optional[str] = None
     instagram_url: Optional[str] = None
     twitter_url: Optional[str] = None
-    youtube_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
     description: Optional[str] = None
 
 class UserProfile(BaseModel):
     id: int
     username: str
-    name: Optional[str] = None
+    email: Optional[str] = None
     instagram_url: Optional[str] = None
     twitter_url: Optional[str] = None
-    youtube_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
     description: Optional[str] = None
     selfie_cid: Optional[str] = None
     selfie_url: Optional[str] = None

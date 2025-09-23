@@ -5,7 +5,7 @@ from typing import Dict
 def get_ssm_parameters() -> Dict[str, str]:
     """Get parameters from SSM and return as dictionary"""
     env = os.getenv('ENVIRONMENT', 'prod')
-    path = f'/{env}' if env != 'echoo' else '/echoo'  # Use /echoo as the path
+    path = f'/echoo'  # Use /echoo as the path
     print(f"Getting SSM parameters for environment: {env}, path: {path}")
     
     try:
