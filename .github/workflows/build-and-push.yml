@@ -64,7 +64,7 @@ jobs:
     - name: Update deployment status
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "✅ Docker image built and pushed successfully!"
-        echo "🐳 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-        echo "📦 Platforms: linux/amd64, linux/arm64"
-        echo "🚀 Ready for Kubernetes deployment!"
+        echo "Docker image built and pushed successfully!"
+        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "Platforms: linux/amd64, linux/arm64"
+        echo "Ready for Kubernetes deployment!"
