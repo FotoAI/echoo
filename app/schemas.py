@@ -30,6 +30,8 @@ class UserProfile(BaseModel):
     description: Optional[str] = None
     selfie_cid: Optional[str] = None
     selfie_url: Optional[str] = None
+    selfie_height: Optional[int] = None
+    selfie_width: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     
@@ -53,6 +55,8 @@ class ImageCreate(BaseModel):
     filecoin_url: Optional[str] = None
     cid: Optional[str] = None
     size: Optional[int] = None
+    height: Optional[int] = None
+    width: Optional[int] = None
     description: Optional[str] = None
     image_encoding: Optional[str] = None
     event_id: Optional[int] = None
@@ -74,6 +78,8 @@ class ImageUpdate(BaseModel):
     filecoin_url: Optional[str] = None
     filecoin_cid: Optional[str] = None
     size: Optional[int] = None
+    height: Optional[int] = None
+    width: Optional[int] = None
     description: Optional[str] = None
     image_encoding: Optional[str] = None
     event_id: Optional[int] = None
@@ -87,6 +93,8 @@ class ImageResponse(BaseModel):
     filecoin_url: Optional[str] = None
     filecoin_cid: Optional[str] = None
     size: Optional[int] = None
+    height: Optional[int] = None
+    width: Optional[int] = None
     description: Optional[str] = None
     image_encoding: Optional[str] = None
     event_id: Optional[int] = None
@@ -105,6 +113,8 @@ class ImageListResponse(BaseModel):
     filecoin_url: Optional[str] = None
     filecoin_cid: Optional[str] = None
     size: Optional[int] = None
+    height: Optional[int] = None
+    width: Optional[int] = None
     description: Optional[str] = None
     image_encoding: Optional[str] = None
     event_id: Optional[int] = None

@@ -141,6 +141,14 @@ near-api-examples/
 migrate_*.py
 migrate_*.sql
 
+# Database migration files
+*.sql
+add_height_width_columns.sql
+fresh_start_migration.sql
+
+# Command files
+commans.txt
+
 # Test files (optional - you might want these)
 test_*.py
 

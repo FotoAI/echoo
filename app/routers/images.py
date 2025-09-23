@@ -34,6 +34,8 @@ async def create_image(
         filecoin_url=image_data.filecoin_url,
         filecoin_cid=image_data.cid,
         size=image_data.size,
+        height=image_data.height,
+        width=image_data.width,
         description=image_data.description,
         image_encoding=image_data.image_encoding,
         event_id=image_data.event_id
@@ -50,6 +52,8 @@ async def create_image(
             logger.info(f"Found user: {user.username}, updating selfie_cid={image_data.cid}, selfie_url={image_data.filecoin_url}")
             user.selfie_cid = image_data.cid
             user.selfie_url = image_data.filecoin_url
+            user.selfie_height = image_data.height
+            user.selfie_width = image_data.width
     else:
         logger.info(f"Not updating selfie: is_selfie={image_data.is_selfie}, user_id={image_data.user_id}")
     
@@ -116,6 +120,8 @@ async def update_image(
             # Use the updated image's current values for selfie fields
             user.selfie_cid = image.filecoin_cid
             user.selfie_url = image.fotoowl_url
+            user.selfie_height = image.height
+            user.selfie_width = image.width
         else:
             logger.error(f"PUT User with id {image.user_id} not found")
             raise HTTPException(
@@ -160,6 +166,8 @@ async def get_user_images(
             "filecoin_url": image.filecoin_url,
             "filecoin_cid": image.filecoin_cid,
             "size": image.size,
+            "height": image.height,
+            "width": image.width,
             "description": image.description,
             "image_encoding": image.image_encoding,
             "event_id": image.event_id,
@@ -250,6 +258,8 @@ async def get_image_list(
             "filecoin_url": image.filecoin_url,
             "filecoin_cid": image.filecoin_cid,
             "size": image.size,
+            "height": image.height,
+            "width": image.width,
             "description": image.description,
             "image_encoding": image.image_encoding,
             "event_id": image.event_id,
