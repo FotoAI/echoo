@@ -34,6 +34,7 @@ ENV/
 .env.staging
 .env.development
 *.env
+!.env.example
 
 # Database
 *.db
@@ -63,12 +64,19 @@ Thumbs.db
 *.log
 logs/
 log/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
+coverage
+*.lcov
+.nyc_output
 
 # Docker
 docker-compose.override.yml
@@ -76,10 +84,48 @@ docker-compose.override.yml
 # Alembic
 alembic/versions/
 
-# Node modules (from examples)
+# Node modules and JavaScript dependencies
 node_modules/
 package-lock.json
 pnpm-lock.yaml
+jspm_packages/
+web_modules/
+.npm
+.eslintcache
+.stylelintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.cache
+.parcel-cache
+.next
+out
+.nuxt
+.temp
+.svelte-kit/
+**/.vitepress/dist
+**/.vitepress/cache
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.firebase/
+.tern-port
+.vscode-test
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+*.tsbuildinfo
+bower_components
+.lock-wscript
+build/Release
+.grunt
 
 # Old directories (don't push experimental code)
 old/
