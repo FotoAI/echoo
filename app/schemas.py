@@ -249,3 +249,31 @@ class FotoOwlRequestMappingBulkResponse(BaseModel):
     total_inserted: int
     total_skipped: int
     skipped_pairs: List[dict]
+
+# Instagram Post schemas
+class InstagramPostCreate(BaseModel):
+    user_id: int
+    caption: Optional[str] = None
+    code: str
+    instagram_created_at: Optional[int] = None
+
+class InstagramPostResponse(BaseModel):
+    id: int
+    user_id: int
+    caption: Optional[str] = None
+    code: str
+    instagram_created_at: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class InstagramApiPost(BaseModel):
+    code: str
+    caption: Optional[dict] = None
+    taken_at: Optional[int] = None
+
+class InstagramApiResponse(BaseModel):
+    posts: List[InstagramApiPost]
+    pagination_token: Optional[str] = None

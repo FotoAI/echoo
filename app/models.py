@@ -87,3 +87,14 @@ class FotoOwlRequestMapping(Base):
     fotoowl_aria_ratio = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class UserInstaPost(Base):
+    __tablename__ = "user_insta_posts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    caption = Column(Text, nullable=True)
+    code = Column(String(255), nullable=False, index=True)
+    instagram_created_at = Column(Integer, nullable=True)  # Instagram's created_at timestamp
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
