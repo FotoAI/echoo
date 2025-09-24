@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, BigInteger, func, Date
+from sqlalchemy import Column, Integer, String, Text, DateTime, BigInteger, func, Date, Float
 from sqlalchemy.ext.declarative import declarative_base
 from pgvector.sqlalchemy import Vector
 
@@ -69,5 +69,22 @@ class Event(Base):
     event_date = Column(Date, nullable=True)
     fotoowl_event_id = Column(Integer, nullable=True, index=True)
     fotoowl_event_key = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class FotoOwlRequestMapping(Base):
+    __tablename__ = "fotoowl_request_mapping"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    fotoowl_unique_id = Column(Integer, nullable=False)
+    fotoowl_request_id = Column(Integer, nullable=False)
+    fotoowl_event_id = Column(Integer, nullable=False, index=True)
+    fotoowl_image_id = Column(Integer, nullable=False)
+    fotoowl_index_num = Column(Integer, nullable=False)
+    fotoowl_x1 = Column(Float, nullable=True)
+    fotoowl_x2 = Column(Float, nullable=True)
+    fotoowl_y1 = Column(Float, nullable=True)
+    fotoowl_y2 = Column(Float, nullable=True)
+    fotoowl_aria_ratio = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

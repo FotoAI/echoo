@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl, validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date
 
 # User schemas
@@ -211,3 +211,43 @@ class FotoOwlImageData(BaseModel):
 class FotoOwlImageListResponse(BaseModel):
     ok: bool
     data: dict  # Contains image_list array
+
+# FotoOwl Request Mapping schemas
+class FotoOwlRequestMappingCreate(BaseModel):
+    fotoowl_unique_id: int
+    fotoowl_request_id: int
+    fotoowl_event_id: int
+    fotoowl_image_id: int
+    fotoowl_index_num: int
+    fotoowl_x1: Optional[float] = None
+    fotoowl_x2: Optional[float] = None
+    fotoowl_y1: Optional[float] = None
+    fotoowl_y2: Optional[float] = None
+    fotoowl_aria_ratio: Optional[float] = None
+
+class FotoOwlRequestMappingResponse(BaseModel):
+    id: int
+    fotoowl_unique_id: int
+    fotoowl_request_id: int
+    fotoowl_event_id: int
+    fotoowl_image_id: int
+    fotoowl_index_num: int
+    fotoowl_x1: Optional[float] = None
+    fotoowl_x2: Optional[float] = None
+    fotoowl_y1: Optional[float] = None
+    fotoowl_y2: Optional[float] = None
+    fotoowl_aria_ratio: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class FotoOwlRequestMappingBulkInsert(BaseModel):
+    mappings: List[FotoOwlRequestMappingCreate]
+
+class FotoOwlRequestMappingBulkResponse(BaseModel):
+    total_received: int
+    total_inserted: int
+    total_skipped: int
+    skipped_unique_ids: List[int]

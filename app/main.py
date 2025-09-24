@@ -16,7 +16,7 @@ except ImportError:
 
 from app.database import engine
 from app.models import Base
-from app.routers import auth, profile, images, events, public_events
+from app.routers import auth, profile, images, events, public_events, fotoowl_request_mapping
 import os
 
 # Application configuration (hardcoded non-sensitive settings)
@@ -52,6 +52,7 @@ app.include_router(profile.router, prefix=API_V1_STR, tags=["profile"])
 app.include_router(images.router, prefix=API_V1_STR, tags=["images"])
 app.include_router(events.router, prefix=API_V1_STR, tags=["events"])
 app.include_router(public_events.router, prefix=API_V1_STR, tags=["public-events"])
+app.include_router(fotoowl_request_mapping.router, prefix=API_V1_STR, tags=["fotoowl-request-mapping"])
 
 @app.get("/")
 async def root():
