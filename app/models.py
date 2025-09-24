@@ -76,7 +76,6 @@ class FotoOwlRequestMapping(Base):
     __tablename__ = "fotoowl_request_mapping"
     
     id = Column(Integer, primary_key=True, index=True)
-    fotoowl_unique_id = Column(Integer, nullable=False)
     fotoowl_request_id = Column(Integer, nullable=False)
     fotoowl_event_id = Column(Integer, nullable=False, index=True)
     fotoowl_image_id = Column(Integer, nullable=False)

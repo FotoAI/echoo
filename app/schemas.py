@@ -214,7 +214,6 @@ class FotoOwlImageListResponse(BaseModel):
 
 # FotoOwl Request Mapping schemas
 class FotoOwlRequestMappingCreate(BaseModel):
-    fotoowl_unique_id: int
     fotoowl_request_id: int
     fotoowl_event_id: int
     fotoowl_image_id: int
@@ -227,7 +226,6 @@ class FotoOwlRequestMappingCreate(BaseModel):
 
 class FotoOwlRequestMappingResponse(BaseModel):
     id: int
-    fotoowl_unique_id: int
     fotoowl_request_id: int
     fotoowl_event_id: int
     fotoowl_image_id: int
@@ -250,4 +248,4 @@ class FotoOwlRequestMappingBulkResponse(BaseModel):
     total_received: int
     total_inserted: int
     total_skipped: int
-    skipped_unique_ids: List[int]
+    skipped_pairs: List[dict]

@@ -27,33 +27,32 @@ async def bulk_insert_fotoowl_request_mappings(
     Bulk insert FotoOwl request mappings
     Requires internal service authentication
     
-    For each event_id, fotoowl_unique_id should not repeat
-    If fotoowl_unique_id already exists for the same event_id, it will be skipped
+    For each event_id, fotoowl_index_num should not repeat
+    If fotoowl_event_id + fotoowl_index_num pair already exists, it will be skipped
     """
     
     total_received = len(bulk_data.mappings)
     total_inserted = 0
     total_skipped = 0
-    skipped_unique_ids = []
+    skipped_pairs = []
     
     try:
         for mapping_data in bulk_data.mappings:
-            # Check if fotoowl_unique_id already exists for this event_id
+            # Check if fotoowl_event_id + fotoowl_index_num pair already exists
             existing_mapping = db.query(FotoOwlRequestMapping).filter(
                 FotoOwlRequestMapping.fotoowl_event_id == mapping_data.fotoowl_event_id,
-                FotoOwlRequestMapping.fotoowl_unique_id == mapping_data.fotoowl_unique_id
+                FotoOwlRequestMapping.fotoowl_index_num == mapping_data.fotoowl_index_num
             ).first()
             
             if existing_mapping:
-                # Skip this mapping as fotoowl_unique_id already exists for this event_id
+                # Skip this mapping as event_id + index_num pair already exists
                 total_skipped += 1
-                skipped_unique_ids.append(mapping_data.fotoowl_unique_id)
-                logger.info(f"Skipping duplicate fotoowl_unique_id {mapping_data.fotoowl_unique_id} for event_id {mapping_data.fotoowl_event_id}")
+                skipped_pairs.append({"event_id": mapping_data.fotoowl_event_id, "index_num": mapping_data.fotoowl_index_num})
+                logger.info(f"Skipping duplicate event_id {mapping_data.fotoowl_event_id} + index_num {mapping_data.fotoowl_index_num} pair")
                 continue
             
             # Create new mapping record
             new_mapping = FotoOwlRequestMapping(
-                fotoowl_unique_id=mapping_data.fotoowl_unique_id,
                 fotoowl_request_id=mapping_data.fotoowl_request_id,
                 fotoowl_event_id=mapping_data.fotoowl_event_id,
                 fotoowl_image_id=mapping_data.fotoowl_image_id,
@@ -77,7 +76,7 @@ async def bulk_insert_fotoowl_request_mappings(
             total_received=total_received,
             total_inserted=total_inserted,
             total_skipped=total_skipped,
-            skipped_unique_ids=skipped_unique_ids
+            skipped_pairs=skipped_pairs
         )
         
     except Exception as e:
