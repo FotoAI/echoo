@@ -29,42 +29,46 @@ async def bulk_insert_fotoowl_request_mappings(
     Requires internal service authentication
     
     For each event_id, fotoowl_index_num should not repeat
-    If fotoowl_event_id + fotoowl_index_num pair already exists, it will be skipped
+    If fotoowl_event_id + fotoowl_index_num + fotoowl_request_id triplet already exists, it will be skipped
     Uses chunked bulk inserts (500 records per chunk) for optimal performance
     """
     
     total_received = len(bulk_data.mappings)
     total_inserted = 0
     total_skipped = 0
-    skipped_pairs = []
+    skipped_triplets = []
     CHUNK_SIZE = 500
     
     try:
-        # Step 1: Filter out duplicates by checking existing pairs in bulk
-        event_index_pairs = [(m.fotoowl_event_id, m.fotoowl_index_num) for m in bulk_data.mappings]
+        # Step 1: Filter out duplicates by checking existing triplets in bulk
+        event_index_request_triplets = [(m.fotoowl_event_id, m.fotoowl_index_num, m.fotoowl_request_id) for m in bulk_data.mappings]
         
-        if event_index_pairs:
-            # Create a query to check all pairs at once
-            pairs_str = ",".join([f"({event_id},{index_num})" for event_id, index_num in event_index_pairs])
-            existing_pairs_query = text(f"""
-                SELECT fotoowl_event_id, fotoowl_index_num 
+        if event_index_request_triplets:
+            # Create a query to check all triplets at once
+            triplets_str = ",".join([f"({event_id},{index_num},{request_id})" for event_id, index_num, request_id in event_index_request_triplets])
+            existing_triplets_query = text(f"""
+                SELECT fotoowl_event_id, fotoowl_index_num, fotoowl_request_id 
                 FROM fotoowl_request_mapping 
-                WHERE (fotoowl_event_id, fotoowl_index_num) IN (VALUES {pairs_str})
+                WHERE (fotoowl_event_id, fotoowl_index_num, fotoowl_request_id) IN (VALUES {triplets_str})
             """)
             
-            existing_pairs_result = db.execute(existing_pairs_query).fetchall()
-            existing_pairs = {(row[0], row[1]) for row in existing_pairs_result}
+            existing_triplets_result = db.execute(existing_triplets_query).fetchall()
+            existing_triplets = {(row[0], row[1], row[2]) for row in existing_triplets_result}
         else:
-            existing_pairs = set()
+            existing_triplets = set()
         
         # Step 2: Filter out duplicates from the input
         new_mappings = []
         for mapping_data in bulk_data.mappings:
-            pair = (mapping_data.fotoowl_event_id, mapping_data.fotoowl_index_num)
-            if pair in existing_pairs:
+            triplet = (mapping_data.fotoowl_event_id, mapping_data.fotoowl_index_num, mapping_data.fotoowl_request_id)
+            if triplet in existing_triplets:
                 total_skipped += 1
-                skipped_pairs.append({"event_id": mapping_data.fotoowl_event_id, "index_num": mapping_data.fotoowl_index_num})
-                logger.info(f"Skipping duplicate event_id {mapping_data.fotoowl_event_id} + index_num {mapping_data.fotoowl_index_num} pair")
+                skipped_triplets.append({
+                    "event_id": mapping_data.fotoowl_event_id, 
+                    "index_num": mapping_data.fotoowl_index_num,
+                    "request_id": mapping_data.fotoowl_request_id
+                })
+                logger.info(f"Skipping duplicate event_id {mapping_data.fotoowl_event_id} + index_num {mapping_data.fotoowl_index_num} + request_id {mapping_data.fotoowl_request_id} triplet")
             else:
                 new_mappings.append(mapping_data)
         
@@ -109,7 +113,7 @@ async def bulk_insert_fotoowl_request_mappings(
             total_received=total_received,
             total_inserted=total_inserted,
             total_skipped=total_skipped,
-            skipped_pairs=skipped_pairs
+            skipped_pairs=skipped_triplets
         )
         
     except Exception as e:
