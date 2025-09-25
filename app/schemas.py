@@ -160,6 +160,7 @@ class EventResponse(BaseModel):
     event_date: Optional[date] = None
     fotoowl_event_id: Optional[int] = None
     fotoowl_event_key: Optional[str] = None
+    registered: Optional[bool] = None  # True if user is registered for this event, None if not authenticated
     created_at: datetime
     updated_at: datetime
     

@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models import User
 import secrets
 import os
+from typing import Optional
 
 security = HTTPBasic()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -54,3 +55,21 @@ def verify_internal_auth(credentials: HTTPBasicCredentials = Depends(security)):
             headers={"WWW-Authenticate": "Basic"},
         )
     return True
+
+def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
+    """Get current authenticated user, returns None if not authenticated"""
+    try:
+        # Check if Authorization header is present
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Basic "):
+            return None
+        
+        # Extract credentials from header
+        import base64
+        credentials = base64.b64decode(auth_header[6:]).decode("utf-8")
+        username, password = credentials.split(":", 1)
+        
+        user = authenticate_user(db, username, password)
+        return user
+    except Exception:
+        return None
