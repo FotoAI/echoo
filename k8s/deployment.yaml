@@ -62,6 +62,16 @@ spec:
             secretKeyRef:
               name: echoo-secrets
               key: POSTGRES_PORT
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: OPENAI_API_KEY
+        - name: INSTA_FETCH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: echoo-secrets
+              key: INSTA_FETCH_KEY
         # Health check
         livenessProbe:
           httpGet:

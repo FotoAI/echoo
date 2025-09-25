@@ -278,3 +278,27 @@ class InstagramApiPost(BaseModel):
 class InstagramApiResponse(BaseModel):
     posts: List[InstagramApiPost]
     pagination_token: Optional[str] = None
+
+# Combined User Info schema
+class UserInfoResponse(BaseModel):
+    # User profile information (excluding password)
+    id: int
+    username: str
+    email: Optional[str] = None
+    instagram_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    description: Optional[str] = None
+    interests: Optional[str] = None
+    selfie_cid: Optional[str] = None
+    selfie_url: Optional[str] = None
+    selfie_height: Optional[int] = None
+    selfie_width: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    # Instagram posts
+    instagram_posts: List[InstagramPostResponse] = []
+    
+    class Config:
+        from_attributes = True

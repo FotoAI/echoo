@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from app.database import get_db
 from app.schemas import EventRegistrationRequest, EventRegistrationResponse, RegisteredEventResponse, EventMatchedImagesRequest, ImageListResponse
 from app.models import EventRequestMapping, User, Event, Image
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_internal_auth
 
 router = APIRouter()
 
@@ -427,3 +427,69 @@ async def get_event_matched_image_list(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Unexpected error: {str(e)}"
         )
+
+@router.get("/internal/get-user-registered-events/{user_id}", response_model=List[RegisteredEventResponse])
+async def get_user_registered_events_internal(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _: bool = Depends(verify_internal_auth)
+):
+    """
+    Internal API to get all events that a user has registered for
+    Returns combined data from EventRequestMapping and Events tables
+    Requires internal service authentication
+    """
+    
+    # Query to join EventRequestMapping with Events table
+    # Left join because the event might not exist in our Events table
+    query = db.query(
+        EventRequestMapping.id.label('registration_id'),
+        EventRequestMapping.fotoowl_event_id,
+        EventRequestMapping.request_id,
+        EventRequestMapping.request_key,
+        EventRequestMapping.redirect_url,
+        EventRequestMapping.created_at.label('registration_created_at'),
+        Event.id.label('event_id'),
+        Event.name.label('event_name'),
+        Event.description.label('event_description'),
+        Event.cover_image_url.label('event_cover_image_url'),
+        Event.cover_image_height.label('event_cover_image_height'),
+        Event.cover_image_width.label('event_cover_image_width'),
+        Event.location.label('event_location'),
+        Event.category.label('event_category'),
+        Event.event_date,
+        Event.fotoowl_event_key
+    ).outerjoin(
+        Event, EventRequestMapping.fotoowl_event_id == Event.fotoowl_event_id
+    ).filter(
+        EventRequestMapping.user_id == user_id
+    ).order_by(
+        EventRequestMapping.created_at.desc()
+    )
+    
+    results = query.all()
+    
+    # Convert to response format
+    registered_events = []
+    for result in results:
+        event_data = RegisteredEventResponse(
+            registration_id=result.registration_id,
+            request_id=result.request_id,
+            request_key=result.request_key,
+            redirect_url=result.redirect_url,
+            registration_created_at=result.registration_created_at,
+            event_id=result.event_id,
+            event_name=result.event_name,
+            event_description=result.event_description,
+            event_cover_image_url=result.event_cover_image_url,
+            event_cover_image_height=result.event_cover_image_height,
+            event_cover_image_width=result.event_cover_image_width,
+            event_location=result.event_location,
+            event_category=result.event_category,
+            event_date=result.event_date,
+            fotoowl_event_id=result.fotoowl_event_id,
+            fotoowl_event_key=result.fotoowl_event_key
+        )
+        registered_events.append(event_data)
+    
+    return registered_events
