@@ -27,6 +27,7 @@ async def create_image(
 
     # If this is a selfie and has a user_id, update the user's selfie fields
     logger.info(f"Selfie check: is_selfie={image_data.is_selfie}, user_id={image_data.user_id}")
+    new_image= None
     if image_data.is_selfie and image_data.user_id:
         logger.info(f"Updating selfie for user_id={image_data.user_id}")
         user = db.query(User).filter(User.id == image_data.user_id).first()
