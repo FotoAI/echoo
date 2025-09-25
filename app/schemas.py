@@ -53,7 +53,7 @@ class ImageCreate(BaseModel):
     user_id: Optional[int] = None
     is_selfie: Optional[bool] = False
     fotoowl_image_id: Optional[int] = None
-    fotoowl_url: Optional[str] = None
+    original_image_url: Optional[str] = None
     filecoin_url: Optional[str] = None
     cid: Optional[str] = None
     size: Optional[int] = None

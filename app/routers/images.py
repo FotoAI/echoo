@@ -24,25 +24,7 @@ async def create_image(
     
     If is_selfie=true, updates user's selfie_cid and selfie_url fields
     """
-    
-    # Create new image record
-    new_image = Image(
-        name=image_data.name,
-        user_id=image_data.user_id,
-        fotoowl_image_id=image_data.fotoowl_image_id,
-        fotoowl_url=image_data.fotoowl_url,
-        filecoin_url=image_data.filecoin_url,
-        filecoin_cid=image_data.cid,
-        size=image_data.size,
-        height=image_data.height,
-        width=image_data.width,
-        description=image_data.description,
-        image_encoding=image_data.image_encoding,
-        event_id=image_data.event_id
-    )
-    
-    db.add(new_image)
-    
+
     # If this is a selfie and has a user_id, update the user's selfie fields
     logger.info(f"Selfie check: is_selfie={image_data.is_selfie}, user_id={image_data.user_id}")
     if image_data.is_selfie and image_data.user_id:
@@ -55,7 +37,22 @@ async def create_image(
             user.selfie_height = image_data.height
             user.selfie_width = image_data.width
     else:
-        logger.info(f"Not updating selfie: is_selfie={image_data.is_selfie}, user_id={image_data.user_id}")
+        new_image = Image(
+            name=image_data.name,
+            user_id=image_data.user_id,
+            fotoowl_image_id=image_data.fotoowl_image_id,
+            fotoowl_url=image_data.original_image_url,
+            filecoin_url=image_data.filecoin_url,
+            filecoin_cid=image_data.cid,
+            size=image_data.size,
+            height=image_data.height,
+            width=image_data.width,
+            description=image_data.description,
+            image_encoding=image_data.image_encoding,
+            event_id=image_data.event_id
+        )
+    
+        db.add(new_image)
     
     # Commit both image and user updates in a single transaction
     db.commit()
