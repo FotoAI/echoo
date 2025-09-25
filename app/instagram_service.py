@@ -18,6 +18,24 @@ class InstagramService:
             "x-rapidapi-key": os.environ.get("INSTA_FETCH_KEY")
         }
     
+    def _clean_none_keys(self, data):
+        """
+        Recursively clean None keys from dictionaries to prevent JSON serialization errors
+        """
+        if isinstance(data, dict):
+            # Filter out None keys and recursively clean values
+            cleaned = {}
+            for key, value in data.items():
+                if key is not None:
+                    cleaned[key] = self._clean_none_keys(value)
+            return cleaned
+        elif isinstance(data, list):
+            # Recursively clean list items
+            return [self._clean_none_keys(item) for item in data]
+        else:
+            # Return primitive values as-is
+            return data
+    
     async def fetch_user_posts(self, instagram_url: str, amount: int = 10) -> Optional[dict]:
         """
         Fetch Instagram posts for a given user URL
@@ -36,7 +54,14 @@ class InstagramService:
                     data=data
                 ) as response:
                     response.raise_for_status()
-                    return await response.json()
+                    json_response = await response.json()
+                    
+                    # Validate and clean the response to prevent None key issues
+                    if isinstance(json_response, dict):
+                        # Recursively clean None keys from the response
+                        json_response = self._clean_none_keys(json_response)
+                    
+                    return json_response
                 
         except aiohttp.ClientError as e:
             logger.error(f"HTTP error fetching Instagram posts: {e}")
@@ -54,32 +79,57 @@ class InstagramService:
         if not api_response or "posts" not in api_response:
             return posts
         
-        for post_node in api_response["posts"]:
-            if "node" in post_node:
+        try:
+            for post_node in api_response["posts"]:
+                if not isinstance(post_node, dict) or "node" not in post_node:
+                    continue
+                    
                 node = post_node["node"]
+                if not isinstance(node, dict):
+                    continue
+                
+                # Safely extract code, ensuring it's not None
+                code = node.get("code")
+                if not code or not isinstance(code, str):
+                    logger.warning("Skipping post with invalid or missing code")
+                    continue
+                
                 post_data = {
-                    "code": node.get("code", ""),
+                    "code": code,
                     "caption": None,
                     "instagram_created_at": None
                 }
                 
-                # Extract caption text
-                if "caption" in node and node["caption"]:
+                # Extract caption text safely
+                if "caption" in node and node["caption"] is not None:
                     caption_data = node["caption"]
-                    if isinstance(caption_data, dict) and "text" in caption_data:
-                        post_data["caption"] = caption_data["text"]
+                    if isinstance(caption_data, dict):
+                        # Check if caption dict has None keys and filter them out
+                        if any(key is None for key in caption_data.keys()):
+                            logger.warning("Found None keys in caption data, filtering them out")
+                            caption_data = {k: v for k, v in caption_data.items() if k is not None}
+                        
+                        if "text" in caption_data and caption_data["text"]:
+                            post_data["caption"] = caption_data["text"]
                     elif isinstance(caption_data, str):
                         post_data["caption"] = caption_data
                 
-                # Extract created_at timestamp
-                if "taken_at" in node:
+                # Extract created_at timestamp safely
+                if "taken_at" in node and node["taken_at"] is not None:
                     post_data["instagram_created_at"] = node["taken_at"]
-                elif "caption" in node and node["caption"] and isinstance(node["caption"], dict):
+                elif ("caption" in node and node["caption"] and 
+                      isinstance(node["caption"], dict) and 
+                      "created_at" in node["caption"]):
                     caption_data = node["caption"]
-                    if "created_at" in caption_data:
+                    if caption_data["created_at"] is not None:
                         post_data["instagram_created_at"] = caption_data["created_at"]
                 
                 posts.append(post_data)
+                
+        except Exception as e:
+            logger.error(f"Error extracting posts from Instagram API response: {e}")
+            logger.error(f"API response structure: {api_response}")
+            return []
         
         return posts
     
