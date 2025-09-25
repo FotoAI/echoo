@@ -185,7 +185,6 @@ class RegisteredEventResponse(BaseModel):
     event_location: Optional[str] = None
     event_category: Optional[str] = None
     event_date: Optional[date] = None
-    fotoowl_event_id: int  # From EventRequestMapping
     fotoowl_event_key: Optional[str] = None
     
     class Config:
@@ -306,9 +305,7 @@ class UserInfoResponse(BaseModel):
 # User Event Images schemas
 class UserEventImageResponse(BaseModel):
     image_id: Optional[int] = None
-    fotoowl_image_id: int
     event_id: Optional[int] = None
-    fotoowl_event_id: int
     fotoowl_request_id: int
     fotoowl_aria_ratio: Optional[float] = None
     fotoowl_x1: Optional[float] = None
@@ -321,6 +318,11 @@ class UserEventImageResponse(BaseModel):
     height: Optional[int] = None
     width: Optional[int] = None
     description: Optional[str] = None
+    # Event information
+    event_description: Optional[str] = None
+    event_event_date: Optional[date] = None
+    event_name: Optional[str] = None
+    event_location: Optional[str] = None
     
     class Config:
         from_attributes = True

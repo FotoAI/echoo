@@ -445,7 +445,6 @@ async def get_user_registered_events_internal(
     # Left join because the event might not exist in our Events table
     query = db.query(
         EventRequestMapping.id.label('registration_id'),
-        EventRequestMapping.fotoowl_event_id,
         EventRequestMapping.request_id,
         EventRequestMapping.request_key,
         EventRequestMapping.redirect_url,
@@ -488,7 +487,6 @@ async def get_user_registered_events_internal(
             event_location=result.event_location,
             event_category=result.event_category,
             event_date=result.event_date,
-            fotoowl_event_id=result.fotoowl_event_id,
             fotoowl_event_key=result.fotoowl_event_key
         )
         registered_events.append(event_data)
@@ -498,7 +496,7 @@ async def get_user_registered_events_internal(
 @router.get("/internal/get-user-event-images/{user_id}", response_model=UserEventImagesListResponse)
 async def get_user_event_images(
     user_id: int,
-    event_id: Optional[int] = Query(None, description="Event ID to filter by (optional)"),
+    event_id_list_str: Optional[str] = Query(None, description="Comma-separated list of event IDs (e.g., '7' or '7,9')"),
     page: int = Query(0, ge=0, description="Page number starting from 0"),
     page_size: int = Query(5, ge=1, le=100, description="Number of images per page"),
     db: Session = Depends(get_db),
@@ -511,21 +509,75 @@ async def get_user_event_images(
     
     Parameters:
     - user_id: User ID to get images for
-    - event_id: Optional event ID to filter by specific event
+    - event_id_list_str: Optional comma-separated list of event IDs (e.g., '7' or '7,9')
+      If invalid (like '-1', 'null', or random strings), treats as None (all events)
     - page: Page number (starts from 0)
     - page_size: Number of images per page (default: 5, max: 100)
     
     Images are ordered by fotoowl_aria_ratio descending
     """
     
+    # Parse event_id_list_str to get list of valid event IDs (internal Events table IDs)
+    internal_event_ids = None
+    if event_id_list_str:
+        try:
+            # Split by comma and convert to integers
+            event_id_strings = [s.strip() for s in event_id_list_str.split(',')]
+            internal_event_ids = []
+            
+            for event_id_str in event_id_strings:
+                # Skip empty strings
+                if not event_id_str:
+                    continue
+                    
+                # Skip 'null' string
+                if event_id_str.lower() == 'null':
+                    continue
+                    
+                # Try to convert to int
+                try:
+                    event_id = int(event_id_str)
+                    # Only accept positive integers
+                    if event_id > 0:
+                        internal_event_ids.append(event_id)
+                except ValueError:
+                    # Skip invalid strings (like random text)
+                    continue
+            
+            # If no valid event IDs found, treat as None
+            if not internal_event_ids:
+                internal_event_ids = None
+                
+        except Exception:
+            # If any error occurs during parsing, treat as None
+            internal_event_ids = None
+    
     # Step 1: Get user's registered events from EventRequestMapping
     event_query = db.query(EventRequestMapping).filter(
         EventRequestMapping.user_id == user_id
     )
     
-    # If event_id is provided, filter by that specific event
-    if event_id is not None:
-        event_query = event_query.filter(EventRequestMapping.fotoowl_event_id == event_id)
+    # If internal_event_ids list is provided, convert to fotoowl_event_ids and filter
+    if internal_event_ids is not None:
+        # Get fotoowl_event_ids for the given internal event IDs
+        fotoowl_event_ids_for_filter = db.query(Event.fotoowl_event_id).filter(
+            Event.id.in_(internal_event_ids),
+            Event.fotoowl_event_id.isnot(None)
+        ).all()
+        
+        if fotoowl_event_ids_for_filter:
+            # Extract fotoowl_event_ids from the query result
+            fotoowl_event_ids_list = [row[0] for row in fotoowl_event_ids_for_filter]
+            event_query = event_query.filter(EventRequestMapping.fotoowl_event_id.in_(fotoowl_event_ids_list))
+        else:
+            # If no matching fotoowl_event_ids found, return empty result
+            return UserEventImagesListResponse(
+                images=[],
+                total_count=0,
+                page=page,
+                page_size=page_size,
+                total_pages=0
+            )
     
     user_events = event_query.all()
     
@@ -543,11 +595,9 @@ async def get_user_event_images(
     fotoowl_event_ids = [event.fotoowl_event_id for event in user_events]
     request_ids = [event.request_id for event in user_events]
     
-    # Step 2: Get images from FotoOwlRequestMapping joined with Images table
+    # Step 2: Get images from FotoOwlRequestMapping joined with Images and Events tables
     # Order by fotoowl_aria_ratio descending
     query = db.query(
-        FotoOwlRequestMapping.fotoowl_image_id,
-        FotoOwlRequestMapping.fotoowl_event_id,
         FotoOwlRequestMapping.fotoowl_request_id,
         FotoOwlRequestMapping.fotoowl_aria_ratio,
         FotoOwlRequestMapping.fotoowl_x1,
@@ -555,19 +605,24 @@ async def get_user_event_images(
         FotoOwlRequestMapping.fotoowl_y1,
         FotoOwlRequestMapping.fotoowl_y2,
         Image.id.label('image_id'),
-        Image.event_id,
+        Event.id.label('event_id'),  # This is the internal Events table id
         Image.fotoowl_url,
         Image.filecoin_url,
         Image.size,
         Image.height,
         Image.width,
-        Image.description
+        Image.description,
+        # Event information
+        Event.description.label('event_description'),
+        Event.event_date.label('event_event_date'),
+        Event.name.label('event_name'),
+        Event.location.label('event_location')
     ).outerjoin(
         Image, 
-        and_(
-            FotoOwlRequestMapping.fotoowl_image_id == Image.fotoowl_image_id,
-            FotoOwlRequestMapping.fotoowl_event_id == Image.event_id
-        )
+        FotoOwlRequestMapping.fotoowl_image_id == Image.fotoowl_image_id
+    ).outerjoin(
+        Event,
+        Image.event_id == Event.fotoowl_event_id
     ).filter(
         FotoOwlRequestMapping.fotoowl_event_id.in_(fotoowl_event_ids),
         FotoOwlRequestMapping.fotoowl_request_id.in_(request_ids)
@@ -590,9 +645,7 @@ async def get_user_event_images(
     for result in results:
         image_data = UserEventImageResponse(
             image_id=result.image_id,
-            fotoowl_image_id=result.fotoowl_image_id,
             event_id=result.event_id,
-            fotoowl_event_id=result.fotoowl_event_id,
             fotoowl_request_id=result.fotoowl_request_id,
             fotoowl_aria_ratio=result.fotoowl_aria_ratio,
             fotoowl_x1=result.fotoowl_x1,
@@ -604,7 +657,12 @@ async def get_user_event_images(
             size=result.size,
             height=result.height,
             width=result.width,
-            description=result.description
+            description=result.description,
+            # Event information
+            event_description=result.event_description,
+            event_event_date=result.event_event_date,
+            event_name=result.event_name,
+            event_location=result.event_location
         )
         images.append(image_data)
     
