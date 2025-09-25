@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import UserProfile, UserProfileUpdate, InstagramPostResponse
+from app.schemas import UserProfile, UserProfileUpdate, InstagramPostResponse, UserInfoResponse
 from app.models import User, UserInstaPost
-from app.auth import get_current_user
+from app.auth import get_current_user, verify_internal_auth
 from app.instagram_service import instagram_service
 import logging
 import re
@@ -135,3 +135,48 @@ async def get_instagram_posts(
     ).order_by(UserInstaPost.created_at.desc()).all()
     
     return posts
+
+@router.get("/internal/get-user-info/{user_id}", response_model=UserInfoResponse)
+async def get_user_info(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _: bool = Depends(verify_internal_auth)
+):
+    """
+    Internal API to get user information and Instagram posts by user_id
+    Returns all user info except password and all Instagram posts
+    Requires internal service authentication
+    """
+    # Get user from database
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Get user's Instagram posts
+    instagram_posts = db.query(UserInstaPost).filter(
+        UserInstaPost.user_id == user_id
+    ).order_by(UserInstaPost.created_at.desc()).all()
+    
+    # Create response object
+    user_info = UserInfoResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        instagram_url=user.instagram_url,
+        twitter_url=user.twitter_url,
+        linkedin_url=user.linkedin_url,
+        description=user.description,
+        interests=user.interests,
+        selfie_cid=user.selfie_cid,
+        selfie_url=user.selfie_url,
+        selfie_height=user.selfie_height,
+        selfie_width=user.selfie_width,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        instagram_posts=instagram_posts
+    )
+    
+    return user_info

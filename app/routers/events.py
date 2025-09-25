@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import and_
+from typing import List, Optional
 import requests
 import tempfile
 import os
 from urllib.parse import urlparse
 from app.database import get_db
-from app.schemas import EventRegistrationRequest, EventRegistrationResponse, RegisteredEventResponse, EventMatchedImagesRequest, ImageListResponse
-from app.models import EventRequestMapping, User, Event, Image
+from app.schemas import EventRegistrationRequest, EventRegistrationResponse, RegisteredEventResponse, EventMatchedImagesRequest, ImageListResponse, UserEventImageResponse, UserEventImagesListResponse
+from app.models import EventRequestMapping, User, Event, Image, FotoOwlRequestMapping
 from app.auth import get_current_user, verify_internal_auth
 
 router = APIRouter()
@@ -493,3 +494,124 @@ async def get_user_registered_events_internal(
         registered_events.append(event_data)
     
     return registered_events
+
+@router.get("/internal/get-user-event-images/{user_id}", response_model=UserEventImagesListResponse)
+async def get_user_event_images(
+    user_id: int,
+    event_id: Optional[int] = Query(None, description="Event ID to filter by (optional)"),
+    page: int = Query(0, ge=0, description="Page number starting from 0"),
+    page_size: int = Query(5, ge=1, le=100, description="Number of images per page"),
+    db: Session = Depends(get_db),
+    _: bool = Depends(verify_internal_auth)
+):
+    """
+    Internal API to get images for user events with pagination
+    Returns images from FotoOwlRequestMapping joined with Images table
+    Requires internal service authentication
+    
+    Parameters:
+    - user_id: User ID to get images for
+    - event_id: Optional event ID to filter by specific event
+    - page: Page number (starts from 0)
+    - page_size: Number of images per page (default: 5, max: 100)
+    
+    Images are ordered by fotoowl_aria_ratio descending
+    """
+    
+    # Step 1: Get user's registered events from EventRequestMapping
+    event_query = db.query(EventRequestMapping).filter(
+        EventRequestMapping.user_id == user_id
+    )
+    
+    # If event_id is provided, filter by that specific event
+    if event_id is not None:
+        event_query = event_query.filter(EventRequestMapping.fotoowl_event_id == event_id)
+    
+    user_events = event_query.all()
+    
+    if not user_events:
+        # Return empty result if user has no registered events
+        return UserEventImagesListResponse(
+            images=[],
+            total_count=0,
+            page=page,
+            page_size=page_size,
+            total_pages=0
+        )
+    
+    # Extract fotoowl_event_ids and request_ids
+    fotoowl_event_ids = [event.fotoowl_event_id for event in user_events]
+    request_ids = [event.request_id for event in user_events]
+    
+    # Step 2: Get images from FotoOwlRequestMapping joined with Images table
+    # Order by fotoowl_aria_ratio descending
+    query = db.query(
+        FotoOwlRequestMapping.fotoowl_image_id,
+        FotoOwlRequestMapping.fotoowl_event_id,
+        FotoOwlRequestMapping.fotoowl_request_id,
+        FotoOwlRequestMapping.fotoowl_aria_ratio,
+        FotoOwlRequestMapping.fotoowl_x1,
+        FotoOwlRequestMapping.fotoowl_x2,
+        FotoOwlRequestMapping.fotoowl_y1,
+        FotoOwlRequestMapping.fotoowl_y2,
+        Image.id.label('image_id'),
+        Image.event_id,
+        Image.fotoowl_url,
+        Image.filecoin_url,
+        Image.size,
+        Image.height,
+        Image.width,
+        Image.description
+    ).outerjoin(
+        Image, 
+        and_(
+            FotoOwlRequestMapping.fotoowl_image_id == Image.fotoowl_image_id,
+            FotoOwlRequestMapping.fotoowl_event_id == Image.event_id
+        )
+    ).filter(
+        FotoOwlRequestMapping.fotoowl_event_id.in_(fotoowl_event_ids),
+        FotoOwlRequestMapping.fotoowl_request_id.in_(request_ids)
+    ).order_by(
+        FotoOwlRequestMapping.fotoowl_aria_ratio.desc().nullslast()
+    )
+    
+    # Get total count for pagination
+    total_count = query.count()
+    
+    # Apply pagination
+    offset = page * page_size
+    results = query.offset(offset).limit(page_size).all()
+    
+    # Calculate total pages
+    total_pages = (total_count + page_size - 1) // page_size
+    
+    # Convert to response format
+    images = []
+    for result in results:
+        image_data = UserEventImageResponse(
+            image_id=result.image_id,
+            fotoowl_image_id=result.fotoowl_image_id,
+            event_id=result.event_id,
+            fotoowl_event_id=result.fotoowl_event_id,
+            fotoowl_request_id=result.fotoowl_request_id,
+            fotoowl_aria_ratio=result.fotoowl_aria_ratio,
+            fotoowl_x1=result.fotoowl_x1,
+            fotoowl_x2=result.fotoowl_x2,
+            fotoowl_y1=result.fotoowl_y1,
+            fotoowl_y2=result.fotoowl_y2,
+            fotoowl_url=result.fotoowl_url,
+            filecoin_url=result.filecoin_url,
+            size=result.size,
+            height=result.height,
+            width=result.width,
+            description=result.description
+        )
+        images.append(image_data)
+    
+    return UserEventImagesListResponse(
+        images=images,
+        total_count=total_count,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )

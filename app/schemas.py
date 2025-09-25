@@ -302,3 +302,32 @@ class UserInfoResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+# User Event Images schemas
+class UserEventImageResponse(BaseModel):
+    image_id: Optional[int] = None
+    fotoowl_image_id: int
+    event_id: Optional[int] = None
+    fotoowl_event_id: int
+    fotoowl_request_id: int
+    fotoowl_aria_ratio: Optional[float] = None
+    fotoowl_x1: Optional[float] = None
+    fotoowl_x2: Optional[float] = None
+    fotoowl_y1: Optional[float] = None
+    fotoowl_y2: Optional[float] = None
+    fotoowl_url: Optional[str] = None
+    filecoin_url: Optional[str] = None
+    size: Optional[int] = None
+    height: Optional[int] = None
+    width: Optional[int] = None
+    description: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+class UserEventImagesListResponse(BaseModel):
+    images: List[UserEventImageResponse]
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
