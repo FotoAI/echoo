@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.post("/internal/images", response_model=ImageResponse)
+@router.post("/internal/images")
 async def create_image(
     image_data: ImageCreate,
     db: Session = Depends(get_db),
@@ -56,9 +56,8 @@ async def create_image(
     
     # Commit both image and user updates in a single transaction
     db.commit()
-    db.refresh(new_image)
-    
-    return new_image
+    if new_image:
+        db.refresh(new_image)
 
 @router.get("/internal/images/{image_id}", response_model=ImageResponse)
 async def get_image(
